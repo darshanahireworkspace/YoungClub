@@ -8,6 +8,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { HomePage } from './pages/HomePage';
+import { AllGamesPage } from './pages/AllGamesPage';
 import { ReferEarnPage } from './pages/ReferEarnPage';
 import { WalletPage } from './pages/WalletPage';
 import { AccountPage } from './pages/AccountPage';
@@ -59,8 +60,10 @@ export default function App() {
         <div className="fixed -bottom-40 -right-40 w-[600px] h-[600px] bg-pink-600/10 rounded-full blur-[140px] pointer-events-none hidden lg:block" />
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[160px] pointer-events-none hidden lg:block" />
 
-        {/* Persistent Top Disclaimer Banner */}
-        <DisclaimerBanner />
+        {/* Top Disclaimer Banner on large screens only */}
+        <div className="hidden lg:block">
+          <DisclaimerBanner />
+        </div>
 
         {/* Centered Mobile-First Frame (max-w-[480px]) */}
         <div className="w-full max-w-[480px] mx-auto min-h-screen flex flex-col relative shadow-[0_0_80px_rgba(0,0,0,0.85)] border-x border-white/5 bg-[#0B0F1E]">
@@ -90,6 +93,22 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <HomePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/all-games"
+              element={
+                <ProtectedRoute>
+                  <AllGamesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/all"
+              element={
+                <ProtectedRoute>
+                  <AllGamesPage />
                 </ProtectedRoute>
               }
             />

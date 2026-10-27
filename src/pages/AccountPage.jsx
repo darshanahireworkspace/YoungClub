@@ -1,65 +1,68 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  User, 
-  KeyRound, 
-  Trophy, 
-  Volume2, 
-  Bell, 
-  HelpCircle, 
-  Info, 
-  LogOut, 
-  ChevronRight, 
-  RefreshCw, 
-  ShieldCheck,
-  Gamepad2,
-  Percent,
-  Flame
+import {
+  RotateCw,
+  Copy,
+  ChevronRight,
+  Power,
+  Mail,
+  Gift,
+  Ticket,
+  BarChart2,
+  Globe,
+  Settings,
+  ClipboardList,
+  Megaphone,
+  MessageCircle,
+  BookOpen,
+  Box,
+  Wallet,
+  Coins,
+  CreditCard,
+  Gem,
+  FileText,
+  Bookmark,
+  CheckCircle2,
+  X
 } from 'lucide-react';
-import { Header } from '../components/common/Header';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BottomNav } from '../components/common/BottomNav';
-import { ProfileHeader } from '../components/account/ProfileHeader';
-import { EditProfileModal } from '../components/account/EditProfileModal';
-import { ChangePasswordModal } from '../components/account/ChangePasswordModal';
-import { FAQAccordion } from '../components/account/FAQAccordion';
-import { AboutModal } from '../components/account/AboutModal';
-import { Modal } from '../components/ui/Modal';
-import { Toggle } from '../components/ui/Toggle';
+import { AddCoinsModal } from '../components/common/AddCoinsModal';
+import { LanguageModal } from '../components/common/LanguageModal';
 import { useAuth } from '../context/AuthContext';
 import { useWallet } from '../context/WalletContext';
 import { useSound } from '../context/SoundContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export const AccountPage = () => {
   const navigate = useNavigate();
-  const { currentUser, updateSettings, logout } = useAuth();
-  const { addCoins } = useWallet();
-  const { soundEnabled, toggleSound, play } = useSound();
-  const { success } = useToast();
+  const { currentUser, logout } = useAuth();
+  const { balance } = useWallet();
+  const { play } = useSound();
+  const { success, info } = useToast();
+  const { currentLanguage, activeLangObj } = useLanguage();
 
-  const [showEdit, setShowEdit] = useState(false);
-  const [showChangePass, setShowChangePass] = useState(false);
-  const [showFaq, setShowFaq] = useState(false);
-  const [showAbout, setShowAbout] = useState(false);
+  // Modals
+  const [showAddCoins, setShowAddCoins] = useState(false);
+  const [showLanguage, setShowLanguage] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [infoModalContent, setInfoModalContent] = useState(null);
 
-  const notificationsEnabled = currentUser?.settings?.notifications ?? true;
-  const stats = currentUser?.stats || {};
-  const gamesPlayed = stats.gamesPlayed || 0;
-  const wins = stats.wins || 0;
-  const winRate = gamesPlayed > 0 ? Math.round((wins / gamesPlayed) * 100) : 0;
-  const biggestWin = stats.biggestWin || 0;
+  // Dynamic user details with fallbacks matching screenshot
+  const username = currentUser?.username ? currentUser.username.toUpperCase() : 'MEMBERNNGH8C8U';
+  const uid = currentUser?.id ? currentUser.id.replace('YC-', '') : '5531917';
+  const lastLogin = '2026-10-27 18:03:41';
 
-  const handleToggleNotifications = (val) => {
+  const handleCopyUid = () => {
     if (play) play.click();
-    updateSettings({ notifications: val });
-    success(val ? 'In-app notifications enabled' : 'Notifications muted');
+    navigator.clipboard?.writeText(uid);
+    success(`Copied UID: ${uid}`);
   };
 
-  const handleReplenishBalance = () => {
-    if (play) play.cashout();
-    addCoins(5000, 'Demo Balance Topup');
-    success('Virtual balance topped up with +5,000 Coins!');
+  const handleRefreshBalance = () => {
+    if (play) play.chip();
+    success('Balance updated');
   };
 
   const handleConfirmLogout = () => {
@@ -70,278 +73,532 @@ export const AccountPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F1E] text-white flex flex-col justify-between pb-24 relative overflow-hidden">
-      {/* Top Header */}
-      <Header />
-
-      <main className="p-4 space-y-4 max-w-lg mx-auto w-full">
-        {/* Profile Card Header */}
-        <ProfileHeader />
-
-        {/* Group 1: Gaming Performance Stats */}
-        <div className="rounded-3xl p-5 bg-[#11172E] border border-white/10 space-y-3.5 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-brand-gold" />
-              <h4 className="text-xs font-black uppercase tracking-wider text-white font-num">
-                Gaming Performance
-              </h4>
-            </div>
-            <span className="text-[10px] text-brand-gold font-num font-black uppercase">
-              LIFETIME STATS
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="p-3 rounded-2xl bg-[#151C38] border border-white/5 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/30 flex items-center justify-center shrink-0">
-                <Gamepad2 className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase font-num">Played</div>
-                <div className="text-base font-black font-num text-white mt-0.5">{gamesPlayed}</div>
-              </div>
+    <div className="min-h-screen bg-[#111428] text-white flex flex-col justify-between pb-28 relative overflow-x-hidden selection:bg-[#7B61FF]">
+      <main className="w-full max-w-[480px] mx-auto">
+        {/* 1. HERO HEADER BANNER (Screenshot Match) */}
+        <div className="relative px-4 pt-6 pb-12 bg-gradient-to-r from-[#FF7657] via-[#C94FE2] to-[#438EFF] text-white">
+          <div className="flex items-center gap-3">
+            {/* Circular Avatar */}
+            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/80 shadow-md shrink-0 bg-slate-800">
+              <img
+                src="/images/user_avatar.jpg"
+                alt="Member Avatar"
+                className="w-full h-full object-cover"
+              />
             </div>
 
-            <div className="p-3 rounded-2xl bg-[#151C38] border border-white/5 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                <Percent className="w-4 h-4" />
+            {/* Member Details */}
+            <div className="flex-1 min-w-0">
+              {/* Username + VIP Badge */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-black text-white tracking-wide font-display truncate">
+                  {username}
+                </span>
+                {/* VIP2 Badge */}
+                <div className="bg-gradient-to-r from-[#F59E0B] to-[#F97316] text-white text-[9px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs font-num shrink-0">
+                  <span>⭐ VIP2</span>
+                </div>
               </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase font-num">Win Rate</div>
-                <div className="text-base font-black font-num text-emerald-400 mt-0.5">{winRate}%</div>
-              </div>
-            </div>
 
-            <div className="p-3 rounded-2xl bg-[#151C38] border border-white/5 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-brand-gold border border-brand-gold/30 flex items-center justify-center shrink-0">
-                <Trophy className="w-4 h-4" />
+              {/* UID Pill with Copy Icon */}
+              <div className="flex items-center gap-1.5 mt-1">
+                <div
+                  onClick={handleCopyUid}
+                  className="bg-black/25 hover:bg-black/35 px-2 py-0.5 rounded-md text-[10px] font-bold text-amber-300 font-num flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                >
+                  <span>UID &nbsp;|&nbsp; {uid}</span>
+                  <Copy className="w-3 h-3 text-amber-200" />
+                </div>
               </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase font-num">Total Wins</div>
-                <div className="text-base font-black font-num text-brand-gold mt-0.5">{wins}</div>
-              </div>
-            </div>
 
-            <div className="p-3 rounded-2xl bg-[#151C38] border border-white/5 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-pink-500/15 text-pink-400 border border-pink-500/30 flex items-center justify-center shrink-0">
-                <Flame className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase font-num">Biggest Win</div>
-                <div className="text-base font-black font-num text-pink-400 mt-0.5">+{biggestWin}</div>
+              {/* Last Login Timestamp */}
+              <div className="text-[10px] text-white/85 font-medium mt-1">
+                Last login: {lastLogin}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Group 2: Account Settings (Grouped List Rows) */}
-        <div className="rounded-3xl bg-[#11172E] border border-white/10 overflow-hidden shadow-lg">
-          <div className="px-5 py-3 border-b border-white/5 text-[10px] font-black uppercase tracking-wider text-slate-400 font-num">
-            Account &amp; Security
-          </div>
-
-          <div className="divide-y divide-white/5">
-            <button
-              onClick={() => {
-                if (play) play.click();
-                setShowEdit(true);
-              }}
-              className="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
-                  <User className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-white">Profile Details</div>
-                  <div className="text-[11px] text-slate-400">Update full name and mobile number</div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-500" />
-            </button>
-
-            <button
-              onClick={() => {
-                if (play) play.click();
-                setShowChangePass(true);
-              }}
-              className="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center">
-                  <KeyRound className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-white">Change Password</div>
-                  <div className="text-[11px] text-slate-400">Update stored credentials</div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-slate-500" />
-            </button>
-          </div>
-        </div>
-
-        {/* Group 3: Preferences & Toggles */}
-        <div className="rounded-3xl bg-[#11172E] border border-white/10 overflow-hidden shadow-lg">
-          <div className="px-5 py-3 border-b border-white/5 text-[10px] font-black uppercase tracking-wider text-slate-400 font-num">
-            App Preferences
-          </div>
-
-          <div className="divide-y divide-white/5">
-            {/* Sound Effects Toggle */}
-            <div className="px-5 py-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-brand-gold/15 text-brand-gold flex items-center justify-center">
-                  <Volume2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-white">Sound Effects</div>
-                  <div className="text-[11px] text-slate-400">Audio feedback during gameplay</div>
-                </div>
-              </div>
-              <Toggle
-                checked={soundEnabled}
-                onChange={toggleSound}
-                color="gold"
-              />
-            </div>
-
-            {/* In-App Notifications Toggle */}
-            <div className="px-5 py-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center">
-                  <Bell className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-white">In-App Alerts</div>
-                  <div className="text-[11px] text-slate-400">Bonus &amp; game result notifications</div>
-                </div>
-              </div>
-              <Toggle
-                checked={notificationsEnabled}
-                onChange={handleToggleNotifications}
-                color="purple"
-              />
-            </div>
-
-            {/* Replenish Demo Balance */}
-            <div className="px-5 py-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
-                  <RefreshCw className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-white">Replenish Virtual Coins</div>
-                  <div className="text-[11px] text-slate-400">Add +5,000 practice tokens</div>
-                </div>
-              </div>
+        {/* 2. TOTAL BALANCE & 4 ACTION BUTTONS CARD (Overlaps header with -mt-8) */}
+        <div className="-mt-7 mx-4 relative z-10 bg-[#1A1E38] border border-white/10 rounded-2xl p-4 shadow-[0_10px_30px_rgba(0,0,0,0.6)]">
+          {/* Total balance row */}
+          <div>
+            <span className="text-xs text-slate-300 font-medium">Total balance</span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-2xl font-black text-white font-num tracking-tight">
+                ₹{(balance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
               <button
-                onClick={handleReplenishBalance}
-                className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-black font-num active:scale-95 transition-all"
+                type="button"
+                onClick={handleRefreshBalance}
+                title="Refresh balance"
+                className="p-1 text-slate-400 hover:text-white active:rotate-180 transition-all duration-300"
               >
-                +5,000
+                <RotateCw className="w-4 h-4" />
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Group 4: Support & Legal */}
-        <div className="rounded-3xl bg-[#11172E] border border-white/10 overflow-hidden shadow-lg">
-          <div className="px-5 py-3 border-b border-white/5 text-[10px] font-black uppercase tracking-wider text-slate-400 font-num">
-            Support &amp; Information
-          </div>
+          {/* Divider Line */}
+          <div className="border-b border-white/10 my-3.5" />
 
-          <div className="divide-y divide-white/5">
-            <button
+          {/* 4 Action Buttons Grid (ARWallet, Deposit, Withdraw, VIP) */}
+          <div className="grid grid-cols-4 gap-2 text-center select-none">
+            {/* 1. ARWallet */}
+            <div
               onClick={() => {
                 if (play) play.click();
-                setShowFaq(true);
+                navigate('/wallet');
               }}
-              className="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+              className="flex flex-col items-center cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center">
-                  <HelpCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-white">Frequently Asked Questions</div>
-                  <div className="text-[11px] text-slate-400">Rules, coins, and fair odds</div>
-                </div>
+              <div className="w-11 h-11 rounded-2xl bg-[#E11D48]/15 border border-rose-500/30 flex items-center justify-center mb-1.5 group-hover:scale-105 active:scale-95 transition-transform shadow-xs">
+                <Wallet className="w-5 h-5 text-rose-400" />
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500" />
-            </button>
+              <span className="text-[11px] font-bold text-slate-200 group-hover:text-white">
+                ARWallet
+              </span>
+            </div>
 
-            <button
+            {/* 2. Deposit */}
+            <div
               onClick={() => {
                 if (play) play.click();
-                setShowAbout(true);
+                setShowAddCoins(true);
               }}
-              className="w-full px-5 py-3.5 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+              className="flex flex-col items-center cursor-pointer group"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center">
-                  <Info className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs sm:text-sm font-semibold text-white">About Young Club</div>
-                  <div className="text-[11px] text-slate-400">Architecture, tech stack &amp; disclaimer</div>
-                </div>
+              <div className="w-11 h-11 rounded-2xl bg-[#D97706]/15 border border-amber-500/30 flex items-center justify-center mb-1.5 group-hover:scale-105 active:scale-95 transition-transform shadow-xs">
+                <Coins className="w-5 h-5 text-amber-400" />
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-500" />
-            </button>
+              <span className="text-[11px] font-bold text-slate-200 group-hover:text-white">
+                Deposit
+              </span>
+            </div>
+
+            {/* 3. Withdraw */}
+            <div
+              onClick={() => {
+                if (play) play.click();
+                info('Withdrawal processing is instant for VIP members.');
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-[#2563EB]/15 border border-blue-500/30 flex items-center justify-center mb-1.5 group-hover:scale-105 active:scale-95 transition-transform shadow-xs">
+                <CreditCard className="w-5 h-5 text-blue-400" />
+              </div>
+              <span className="text-[11px] font-bold text-slate-200 group-hover:text-white">
+                Withdraw
+              </span>
+            </div>
+
+            {/* 4. VIP */}
+            <div
+              onClick={() => {
+                if (play) play.chip();
+                setInfoModalContent({
+                  title: 'VIP Privileges',
+                  desc: 'You are currently Tier VIP2! Enjoy 1.2x daily streak boosts, priority withdrawals, and exclusive milestone chests.',
+                });
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-11 h-11 rounded-2xl bg-[#059669]/15 border border-emerald-500/30 flex items-center justify-center mb-1.5 group-hover:scale-105 active:scale-95 transition-transform shadow-xs">
+                <Gem className="w-5 h-5 text-emerald-400" />
+              </div>
+              <span className="text-[11px] font-bold text-slate-200 group-hover:text-white">
+                VIP
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Group 5: Red Logout Button */}
-        <button
-          onClick={() => {
-            if (play) play.click();
-            setShowLogoutConfirm(true);
-          }}
-          className="w-full py-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-brand-red/30 text-rose-300 font-black text-xs font-num tracking-wide flex items-center justify-center gap-2 active:scale-97 transition-all shadow-sm"
-        >
-          <LogOut className="w-4 h-4 text-brand-red" />
-          <span>SIGN OUT FROM YOUNG CLUB</span>
-        </button>
+        {/* 3. HISTORY 2x2 CARDS (Game History, Transaction, Deposit, Withdraw) */}
+        <div className="px-4 pt-3.5 grid grid-cols-2 gap-2.5">
+          {/* Card 1: Game History */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setInfoModalContent({
+                title: 'Game History',
+                desc: 'View all recent Crash multipliers, Wingo colors, and tactical bets in real-time.',
+              });
+            }}
+            className="p-3 rounded-2xl bg-[#1A1E38] border border-white/5 hover:border-white/10 flex items-center gap-3 cursor-pointer shadow-sm active:scale-98 transition-all"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-xs font-bold text-white">Game History</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">My game history</div>
+            </div>
+          </div>
+
+          {/* Card 2: Transaction */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setInfoModalContent({
+                title: 'Transaction History',
+                desc: 'All virtual coin recharges, welcome bonuses, and streak claims are logged.',
+              });
+            }}
+            className="p-3 rounded-2xl bg-[#1A1E38] border border-white/5 hover:border-white/10 flex items-center gap-3 cursor-pointer shadow-sm active:scale-98 transition-all"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-xs font-bold text-white">Transaction</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">My transaction history</div>
+            </div>
+          </div>
+
+          {/* Card 3: Deposit History */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setInfoModalContent({
+                title: 'Deposit Records',
+                desc: 'Deposit status is completed immediately with instant coin credits.',
+              });
+            }}
+            className="p-3 rounded-2xl bg-[#1A1E38] border border-white/5 hover:border-white/10 flex items-center gap-3 cursor-pointer shadow-sm active:scale-98 transition-all"
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0">
+              <Bookmark className="w-5 h-5" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-xs font-bold text-white">Deposit</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">My deposit history</div>
+            </div>
+          </div>
+
+          {/* Card 4: Withdraw History */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setInfoModalContent({
+                title: 'Withdrawal Records',
+                desc: 'Safe virtual wallet records protected by end-to-end audit logs.',
+              });
+            }}
+            className="p-3 rounded-2xl bg-[#1A1E38] border border-white/5 hover:border-white/10 flex items-center gap-3 cursor-pointer shadow-sm active:scale-98 transition-all"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+              <Coins className="w-5 h-5" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-xs font-bold text-white">Withdraw</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">My withdraw history</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. MENU LIST (Notification, Gifts, Coupons, Statistics, Language) */}
+        <div className="mx-4 mt-3 bg-[#1A1E38] border border-white/5 rounded-2xl divide-y divide-white/5 overflow-hidden shadow-sm">
+          {/* Notification */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setInfoModalContent({
+                title: 'Notifications',
+                desc: 'No unread platform notices. You are up to date on all rewards and system events.',
+              });
+            }}
+            className="px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3 text-xs font-bold text-white">
+              <Mail className="w-4 h-4 text-[#8E82E3]" />
+              <span>Notification</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-500" />
+          </div>
+
+          {/* Gifts */}
+          <div
+            onClick={() => {
+              if (play) play.win();
+              success('Gift claimed: +200 bonus coins awarded!');
+            }}
+            className="px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3 text-xs font-bold text-white">
+              <Gift className="w-4 h-4 text-[#8E82E3]" />
+              <span>Gifts</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-500" />
+          </div>
+
+          {/* My Top-Up Coupons */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setInfoModalContent({
+                title: 'Top-Up Coupons',
+                desc: 'Active Coupons: 1x 100% Recharge Booster, 1x VIP Cashout Shield.',
+              });
+            }}
+            className="px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3 text-xs font-bold text-white">
+              <Ticket className="w-4 h-4 text-[#8E82E3]" />
+              <span>My Top-Up Coupons</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-500" />
+          </div>
+
+          {/* Game statistics */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setInfoModalContent({
+                title: 'Game Statistics',
+                desc: 'Games Played: 24 | Wins: 15 (62.5% winrate) | Biggest Multiplier Win: 2,400 Coins.',
+              });
+            }}
+            className="px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3 text-xs font-bold text-white">
+              <BarChart2 className="w-4 h-4 text-[#8E82E3]" />
+              <span>Game statistics</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-slate-500" />
+          </div>
+
+          {/* Language Selector */}
+          <div
+            onClick={() => {
+              if (play) play.click();
+              setShowLanguage(true);
+            }}
+            className="px-4 py-3.5 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3 text-xs font-bold text-white">
+              <Globe className="w-4 h-4 text-[#8E82E3]" />
+              <span>Language</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <span>{activeLangObj?.name || 'English'}</span>
+              <ChevronRight className="w-4 h-4 text-slate-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* 5. SERVICE CENTER (Settings, Feedback, Announcement, Customer Service, Guide, About us) */}
+        <div className="mx-4 mt-3 bg-[#1A1E38] border border-white/5 rounded-2xl p-4 space-y-4 shadow-sm">
+          <div className="text-xs font-bold text-white">Service center</div>
+
+          <div className="grid grid-cols-3 gap-y-4 gap-x-2 text-center select-none">
+            {/* Settings */}
+            <div
+              onClick={() => {
+                if (play) play.click();
+                setInfoModalContent({
+                  title: 'Account Settings',
+                  desc: 'Manage profile credentials, audio effects, and privacy controls.',
+                });
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#8E82E3]/15 text-[#8E82E3] flex items-center justify-center mb-1 group-hover:scale-105 active:scale-95 transition-transform">
+                <Settings className="w-4 h-4" />
+              </div>
+              <span className="text-[11px] text-slate-300 group-hover:text-white">Settings</span>
+            </div>
+
+            {/* Feedback */}
+            <div
+              onClick={() => {
+                if (play) play.click();
+                setInfoModalContent({
+                  title: 'Feedback',
+                  desc: 'Thank you for your valuable feedback! Our team reviews player suggestions daily.',
+                });
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#8E82E3]/15 text-[#8E82E3] flex items-center justify-center mb-1 group-hover:scale-105 active:scale-95 transition-transform">
+                <ClipboardList className="w-4 h-4" />
+              </div>
+              <span className="text-[11px] text-slate-300 group-hover:text-white">Feedback</span>
+            </div>
+
+            {/* Announcement */}
+            <div
+              onClick={() => {
+                if (play) play.click();
+                setInfoModalContent({
+                  title: 'Announcements',
+                  desc: 'Latest maintenance update: Young Club server upgraded with 99.9% uptime and zero latency.',
+                });
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#8E82E3]/15 text-[#8E82E3] flex items-center justify-center mb-1 group-hover:scale-105 active:scale-95 transition-transform">
+                <Megaphone className="w-4 h-4" />
+              </div>
+              <span className="text-[11px] text-slate-300 group-hover:text-white">Announcement</span>
+            </div>
+
+            {/* Customer Service */}
+            <div
+              onClick={() => {
+                if (play) play.click();
+                setInfoModalContent({
+                  title: 'Customer Service 24/7',
+                  desc: 'Customer service agent online. Tap live chat to connect with official support.',
+                });
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#8E82E3]/15 text-[#8E82E3] flex items-center justify-center mb-1 group-hover:scale-105 active:scale-95 transition-transform">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+              <span className="text-[11px] text-slate-300 group-hover:text-white leading-tight">Customer Service</span>
+            </div>
+
+            {/* Beginner's Guide */}
+            <div
+              onClick={() => {
+                if (play) play.click();
+                setInfoModalContent({
+                  title: "Beginner's Guide",
+                  desc: 'Learn how to play Aviator Crash curve, predict colors in Wingo, and multiply virtual tokens safely.',
+                });
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#8E82E3]/15 text-[#8E82E3] flex items-center justify-center mb-1 group-hover:scale-105 active:scale-95 transition-transform">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <span className="text-[11px] text-slate-300 group-hover:text-white leading-tight">Beginner&apos;s Guide</span>
+            </div>
+
+            {/* About us */}
+            <div
+              onClick={() => {
+                if (play) play.click();
+                setInfoModalContent({
+                  title: 'About Young Club',
+                  desc: 'Young Club is the next-gen arcade entertainment experience. Play games, invite friends, and enjoy non-stop thrills.',
+                });
+              }}
+              className="flex flex-col items-center cursor-pointer group"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#8E82E3]/15 text-[#8E82E3] flex items-center justify-center mb-1 group-hover:scale-105 active:scale-95 transition-transform">
+                <Box className="w-4 h-4" />
+              </div>
+              <span className="text-[11px] text-slate-300 group-hover:text-white">About us</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 6. LOG OUT PILL BUTTON (Screenshot Match) */}
+        <div className="mx-4 mt-5 mb-4">
+          <button
+            type="button"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full py-3 rounded-full border border-[#6B66C5] bg-transparent text-[#9D94FF] hover:bg-white/5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 font-bold text-xs"
+          >
+            <Power className="w-4 h-4 stroke-[2.5]" />
+            <span>Log out</span>
+          </button>
+        </div>
       </main>
 
-      {/* Modals */}
-      <EditProfileModal isOpen={showEdit} onClose={() => setShowEdit(false)} />
-      <ChangePasswordModal isOpen={showChangePass} onClose={() => setShowChangePass(false)} />
-      <Modal isOpen={showFaq} onClose={() => setShowFaq(false)} title="Help & FAQ">
-        <FAQAccordion />
-      </Modal>
-      <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
-
-      {/* Logout Confirmation */}
-      <Modal
-        isOpen={showLogoutConfirm}
-        onClose={() => setShowLogoutConfirm(false)}
-        title="Confirm Sign Out"
-      >
-        <div className="space-y-4 text-xs text-slate-300 leading-relaxed">
-          <p>
-            Are you sure you want to sign out? Your virtual coin balance and transaction records will remain safely saved in your browser local storage.
-          </p>
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            <button
-              onClick={() => setShowLogoutConfirm(false)}
-              className="py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-bold text-xs text-white active:scale-97"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirmLogout}
-              className="py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white font-black font-num text-xs shadow-glow-red active:scale-97"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </Modal>
-
+      {/* 7. BOTTOM NAVIGATION BAR (Image 2) */}
       <BottomNav />
+
+      {/* Modals */}
+      <AddCoinsModal isOpen={showAddCoins} onClose={() => setShowAddCoins(false)} />
+      <LanguageModal isOpen={showLanguage} onClose={() => setShowLanguage(false)} />
+
+      {/* Info Dialog */}
+      <AnimatePresence>
+        {infoModalContent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setInfoModalContent(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative z-10 w-full max-w-sm bg-[#1D213A] border border-white/10 rounded-2xl p-5 space-y-3"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <h3 className="text-sm font-bold text-white">{infoModalContent.title}</h3>
+                <button
+                  type="button"
+                  onClick={() => setInfoModalContent(null)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">{infoModalContent.desc}</p>
+              <button
+                type="button"
+                onClick={() => setInfoModalContent(null)}
+                className="w-full py-2.5 rounded-full bg-[#7B61FF] text-white text-xs font-bold hover:bg-[#6c51f5]"
+              >
+                Close
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Logout Confirmation Dialog */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogoutConfirm(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative z-10 w-full max-w-sm bg-[#1D213A] border border-white/10 rounded-2xl p-5 text-center space-y-3"
+            >
+              <div className="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+                <Power className="w-5 h-5" />
+              </div>
+              <h3 className="text-sm font-bold text-white">Log Out</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Are you sure you want to log out of your Young Club account?
+              </p>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="py-2.5 rounded-full bg-white/5 border border-white/10 text-white text-xs font-bold hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmLogout}
+                  className="py-2.5 rounded-full bg-rose-600 text-white text-xs font-bold hover:bg-rose-500"
+                >
+                  Log Out
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

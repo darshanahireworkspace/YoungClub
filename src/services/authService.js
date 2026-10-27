@@ -16,9 +16,15 @@ export const authService = {
    */
   init() {
     let users = storageService.get(USERS_KEY, []);
-    const demoExists = users.some(u => u.username === DEMO_USER.username || u.mobile === DEMO_USER.mobile);
-    if (!demoExists) {
+    const demoIndex = users.findIndex(u => u.username === DEMO_USER.username || u.mobile === DEMO_USER.mobile);
+    if (demoIndex === -1) {
       users = [DEMO_USER, ...users];
+      storageService.set(USERS_KEY, users);
+    } else {
+      // Ensure the demo user always has the latest password 'nikhil2006' and fields
+      users[demoIndex].passwordHash = DEMO_USER.passwordHash;
+      users[demoIndex].mobile = DEMO_USER.mobile;
+      users[demoIndex].username = DEMO_USER.username;
       storageService.set(USERS_KEY, users);
     }
 
@@ -72,17 +78,31 @@ export const authService = {
     }
 
     const users = this.getUsers();
-    const user = users.find(
-      u => u.username.toLowerCase() === cleanId || u.mobile.toLowerCase() === cleanId
+    const numericId = cleanId.replace(/\D/g, '');
+    const cleanNumericId = numericId.length > 10 && numericId.startsWith('91') ? numericId.slice(2) : numericId;
+
+    let user = users.find(
+      u => u.username?.toLowerCase() === cleanId ||
+           u.mobile?.toLowerCase() === cleanId ||
+           (cleanNumericId && u.mobile?.replace(/\D/g, '') === cleanNumericId) ||
+           (u.email && u.email?.toLowerCase() === cleanId)
     );
+
+    // Fallback if demo user
+    if (!user && (cleanId === '7620349985' || cleanNumericId === '7620349985' || cleanId === 'nikhil' || cleanId === 'nikhil shinde')) {
+      user = DEMO_USER;
+    }
 
     if (!user) {
       return { success: false, error: 'Account not found with this mobile or username' };
     }
 
-    // Check password (case-insensitive for convenience and demo requirement)
+    // Check password (accepts nikhil2006 case-insensitively)
     const storedPass = (user.passwordHash || '').toLowerCase();
-    if (storedPass !== cleanPass) {
+    const isDemo = user.mobile === '7620349985' || user.username === '7620349985';
+    const isValidPass = storedPass === cleanPass || (isDemo && (cleanPass === 'nikhil2006' || cleanPass === 'nikhil shinde 2006'));
+
+    if (!isValidPass) {
       return { success: false, error: 'Incorrect password. Try again or use Demo Login.' };
     }
 
@@ -95,22 +115,19 @@ export const authService = {
    * Register a new user
    * Gives 1000 welcome coins automatically!
    */
-  register({ name, mobile, username, password, confirmPassword }) {
+  register({ name, mobile, username, password, confirmPassword, inviteCode, email }) {
     this.init();
-    const cleanName = (name || '').trim();
-    const cleanMobile = (mobile || '').trim();
-    const cleanUsername = (username || '').trim().toLowerCase();
+    let cleanMobile = (mobile || '').replace(/\D/g, '');
+    if (cleanMobile.length > 10 && cleanMobile.startsWith('91')) {
+      cleanMobile = cleanMobile.slice(2);
+    }
     const cleanPass = (password || '').trim();
+    const cleanName = (name || '').trim() || (cleanMobile ? `User ${cleanMobile.slice(-4)}` : 'Member');
+    const cleanUsername = (username || '').trim().toLowerCase() || (cleanMobile ? `u${cleanMobile}` : `user_${Date.now().toString().slice(-6)}`);
 
     // Validation
-    if (!cleanName || cleanName.length < 2) {
-      return { success: false, error: 'Please enter a valid full name' };
-    }
-    if (!/^\d{10}$/.test(cleanMobile)) {
-      return { success: false, error: 'Mobile number must be exactly 10 digits' };
-    }
-    if (!cleanUsername || cleanUsername.length < 3) {
-      return { success: false, error: 'Username must be at least 3 characters' };
+    if (cleanMobile.length < 10) {
+      return { success: false, error: 'Mobile number must be at least 10 digits' };
     }
     if (!cleanPass || cleanPass.length < 4) {
       return { success: false, error: 'Password must be at least 4 characters' };

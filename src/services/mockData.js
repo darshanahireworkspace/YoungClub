@@ -10,7 +10,7 @@ export const DEMO_USER = {
   username: '7620349985',
   mobile: '7620349985',
   // Password stored in lower-case trimmed for case-insensitive verification
-  passwordHash: 'nikhil shinde 2006',
+  passwordHash: 'nikhil2006',
   balance: 5000,
   avatar: 'NS',
   referralCode: 'NIKHIL7620',
